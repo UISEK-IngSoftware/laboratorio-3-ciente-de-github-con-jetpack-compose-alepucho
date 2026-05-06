@@ -1,42 +1,58 @@
 package ec.edu.uisek.githubclient.ui.screens
 
-import androidx.compose.foundation.layout.Column
+import android.R
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import ec.edu.uisek.githubclient.ui.components.RepoItem
+import ec.edu.uisek.githubclient.viewmodels.RepoListViewModel
 
 @Composable
-fun RepoList (){
-    Column(
-        modifier = Modifier
-            .padding(top=40.dp, start=16.dp, end=16.dp, bottom=16.dp)
+fun RepoList (
+    modifier: Modifier=Modifier,
+    viewModel: RepoListViewModel= viewModel()
+){
+    val repos by viewModel.repos.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val errorMsg by viewModel.errorMsg.collectAsState()
+    Box(
+        modifier=Modifier
+            .fillMaxSize()
+            .padding(vertical = 48.dp)
     ){
-        RepoItem(
-            repoName="Repositorio de Android",
-            repoDescription="Este es un repositorio construido en Kotlin junto a JackCompose",
-            repoLanguage = "Kotlin",
-            repoImage = "https://avatars.githubusercontent.com/u/214575627?v=4"
-        )
-        RepoItem(
-            repoName="Repositorio Django",
-            repoDescription="Este es un repositorio construido en Python y HTML",
-            repoLanguage = "Python y HTML",
-            repoImage = "https://avatars.githubusercontent.com/u/214575627?v=4"
-        )
-        RepoItem(
-            repoName="Repositorio de React",
-            repoDescription="Este es un repositorio construido en React junto a VITE",
-            repoLanguage = "Typescript",
-            repoImage = "https://avatars.githubusercontent.com/u/214575627?v=4"
-        )
-        RepoItem(
-            repoName="Repositorio de Swift",
-            repoDescription="Este es un repositorio construido en Swift",
-            repoLanguage = "Swift",
-            repoImage = "https://avatars.githubusercontent.com/u/214575627?v=4"
-        )
-
+        if(isLoading){
+            CircularProgressIndicator(
+                modifier= Modifier.align (Alignment.Center)
+            )
+        }
+        errorMsg?.let { message->
+            Text(
+                text = message,
+                color= MaterialTheme.colorScheme.error,
+                modifier= Modifier
+                    .align(Alignment.Center)
+                    .padding(16.dp)
+            )
+        }
+        if(!isLoading&&errorMsg==null){
+            LazyColumn(
+                modifier=Modifier.fillMaxSize()
+            ) {
+                items(repos.size) { i ->
+                    RepoItem(repos[i])
+                }
+            }
+        }
     }
 }
