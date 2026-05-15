@@ -34,15 +34,18 @@ import ec.edu.uisek.githubclient.viewmodels.RepoFormViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RepoForm(
-    onSaveSuccess: () -> Unit={},
-    onBackClick: () -> Unit={},
-    viewModel: RepoFormViewModel= viewModel()
+    owner: String? = null,
+    repoName: String? = null,
+    onSaveSuccess: () -> Unit = {},
+    onBackClick: () -> Unit = {},
+    viewModel: RepoFormViewModel = viewModel()
 ) {
     val isLoading by viewModel.isLoading.collectAsState()
     val isSuccess by viewModel.isSuccess.collectAsState()
     val errorMsg by viewModel.errorMsg.collectAsState()
-    var name by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf(repoName ?: "") }
     var description by remember { mutableStateOf("") }
+    val isEditing = owner != null && repoName != null
 
     LaunchedEffect(isSuccess) {
         if (isSuccess) {
@@ -53,7 +56,7 @@ fun RepoForm(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Nuevo Repositorio") },
+                title = { Text(if (isEditing) "Editar Repositorio" else "Nuevo Repositorio") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
@@ -75,11 +78,9 @@ fun RepoForm(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(16.dp),
-            contentAlignment = androidx.compose.ui.Alignment.Center // Centro el contenido del Box
+            contentAlignment = androidx.compose.ui.Alignment.Center
         ) {
             Column(
-                // Ajustamos la columna para que no ocupe todo el alto,
-                // sino solo lo necesario y esté centrada
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
@@ -89,7 +90,8 @@ fun RepoForm(
                     onValueChange = { name = it },
                     label = { Text("Nombre del repositorio") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    enabled = !isEditing // En GitHub el nombre suele ser parte de la URL, pero para simplificar...
                 )
 
                 OutlinedTextField(
@@ -100,12 +102,26 @@ fun RepoForm(
                     minLines = 3
                 )
 
+                if (errorMsg != null) {
+                    Text(text = errorMsg!!, color = MaterialTheme.colorScheme.error)
+                }
+
                 Button(
-                    onClick = { viewModel.createRepository(name, description) },
-                    enabled = name.isNotBlank(),
+                    onClick = {
+                        if (owner != null && repoName != null) {
+                            viewModel.updateRepository(owner, repoName, name, description)
+                        } else {
+                            viewModel.createRepository(name, description)
+                        }
+                    },
+                    enabled = name.isNotBlank() && !isLoading,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Guardar Repositorio")
+                    if (isLoading) {
+                        Text("Guardando...")
+                    } else {
+                        Text(if (isEditing) "Actualizar Repositorio" else "Guardar Repositorio")
+                    }
                 }
             }
         }

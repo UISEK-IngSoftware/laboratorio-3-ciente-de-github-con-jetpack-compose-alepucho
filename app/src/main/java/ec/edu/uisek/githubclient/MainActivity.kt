@@ -22,11 +22,20 @@ class MainActivity : ComponentActivity() {
             val listViewModel: RepoListViewModel=viewModel()
             GithubClientTheme {
                 var currentScreen by remember { mutableStateOf("repoList") }
+                var selectedOwner by remember { mutableStateOf<String?>(null) }
+                var selectedRepo by remember { mutableStateOf<String?>(null) }
+
                 when(currentScreen){
                     "repoList" -> RepoList(
-                        onNavigateToForm = { currentScreen="repoForm" }
+                        onNavigateToForm = { owner, repo ->
+                            selectedOwner = owner
+                            selectedRepo = repo
+                            currentScreen = "repoForm"
+                        }
                     )
                     "repoForm" -> RepoForm(
+                        owner = selectedOwner,
+                        repoName = selectedRepo,
                         onSaveSuccess = {
                             listViewModel.fetchRepos()
                             currentScreen="repoList"},

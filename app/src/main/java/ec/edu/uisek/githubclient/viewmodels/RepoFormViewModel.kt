@@ -1,5 +1,7 @@
 package ec.edu.uisek.githubclient.viewmodels
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.runtime.Composable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ec.edu.uisek.githubclient.models.RepositoryPayload
@@ -21,7 +23,6 @@ class RepoFormViewModel: ViewModel() {
     fun createRepository(name:String,description:String){
         viewModelScope.launch {
             _isLoading.value=true
-            //_isSuccess.value=false
             _errorMsg.value=null
             try {
                 val payload= RepositoryPayload(name, description)
@@ -32,6 +33,24 @@ class RepoFormViewModel: ViewModel() {
                 e.printStackTrace()
             }finally {
                 _isLoading.value=false
+            }
+        }
+    }
+
+    fun updateRepository(owner: String, repoName: String, name: String, description: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMsg.value = null
+
+            try {
+                val payload = RepositoryPayload(name, description)
+                apiService.updateRepository(owner, repoName, payload)
+                _isSuccess.value = true
+            } catch (e: Exception) {
+                _errorMsg.value = "Error al actualizar repositorio: ${e.localizedMessage}"
+                e.printStackTrace()
+            } finally {
+                _isLoading.value = false
             }
         }
     }
